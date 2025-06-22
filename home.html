@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLNEX - الصفحة الرئيسية</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
+      authDomain: "volnex-cd132.firebaseapp.com",
+      projectId: "volnex-cd132",
+      storageBucket: "volnex-cd132.appspot.com",
+      messagingSenderId: "261208664577",
+      appId: "1:261208664577:web:2d91010408a2188263ae00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // استخراج البيانات من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("uid");
+    const username = urlParams.get("username") || "مستخدم تليجرام";
+    const photo = urlParams.get("photo") || "https://t.me/i/userpic/320/placeholder.jpg";
+
+    // إرسال البيانات إلى الباك إند لحفظ المستخدم
+    fetch("https://volnex-backend--huissh04.repl.co/saveUser", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, username, photo }),
+    })
+    .then(res => res.json())
+    .then(() => {
+      // جلب بيانات المستخدم من Firestore
+      const docRef = doc(db, "users", uid);
+      getDoc(docRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.querySelector("h2").textContent = `مرحبًا، ${data.username}`;
+          document.getElementById("currentPoints").textContent = data.points;
+
+          // عرض صورة الكوكب حسب النقاط
+          const planetImage = document.querySelector('.planet-image');
+          let points = data.points;
+          if (points >= 2000000) planetImage.src = 'assets/planet10.png';
+          else if (points >= 1000000) planetImage.src = 'assets/planet9.png';
+          else if (points >= 700000) planetImage.src = 'assets/planet8.png';
+          else if (points >= 500000) planetImage.src = 'assets/planet7.png';
+          else if (points >= 300000) planetImage.src = 'assets/planet6.png';
+          else if (points >= 200000) planetImage.src = 'assets/planet5.png';
+          else if (points >= 100000) planetImage.src = 'assets/planet4.png';
+          else if (points >= 50000) planetImage.src = 'assets/planet3.png';
+          else if (points >= 20000) planetImage.src = 'assets/planet2.png';
+          else planetImage.src = 'assets/planet1.png';
+        }
+      });
+
+      // تمرير uid وبيانات المستخدم لجميع الروابط
+      const links = document.querySelectorAll("a");
+      links.forEach(link => {
+        const url = new URL(link.href, window.location.origin);
+        url.searchParams.set("uid", uid);
+        url.searchParams.set("username", username);
+        url.searchParams.set("photo", photo);
+        link.href = url.toString();
+      });
+    })
+    .catch((err) => {
+      console.error("فشل تسجيل المستخدم:", err);
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h2><i class="fa-solid fa-house"></i> الصفحة الرئيسية</h2>
+  </header>
+
+  <section class="status">
+    <img src="assets/planet1.png" class="planet-image" alt="Planet" />
+    <h2>مرحبًا، اسم المستخدم</h2>
+    <p>النقاط الحالية: <span id="currentPoints">0</span></p>
+    <div class="play-btn-container">
+      <a href="play.html" class="btn play-btn">
+        <i class="fa-solid fa-rocket"></i> ابدأ اللعب
+      </a>
+    </div>
+  </section>
+
+  <nav class="navbar">
+    <a href="home.html" class="active"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="task.html"><i class="fa-solid fa-list-check"></i> Tasks</a>
+    <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+    <a href="profile.html"><i class="fa-solid fa-user-circle"></i> Profile</a>
+  </nav>
+</body>
+</html>

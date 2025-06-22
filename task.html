@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLNEX - المهام</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
+      authDomain: "volnex-cd132.firebaseapp.com",
+      projectId: "volnex-cd132",
+      storageBucket: "volnex-cd132.appspot.com",
+      messagingSenderId: "261208664577",
+      appId: "1:261208664577:web:2d91010408a2188263ae00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const taskButtons = {
+      daily_login: document.getElementById("btn-daily"),
+      invite_friend: document.getElementById("btn-invite"),
+      finish_game: document.getElementById("btn-finish"),
+    };
+
+    let uid = null;
+    let username = "مستخدم تليجرام";
+    let photo = "https://t.me/i/userpic/320/placeholder.jpg";
+    const today = new Date().toISOString().split("T")[0];
+
+    async function checkTaskStatus() {
+      const userRef = doc(db, "users", uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data();
+      const completed = data.completedTasks || [];
+
+      for (const task in taskButtons) {
+        const taskId = `${task}_${today}`;
+        const btn = taskButtons[task];
+        if (completed.includes(taskId)) {
+          btn.disabled = true;
+          btn.textContent = "✅ تم التحصيل";
+        }
+      }
+    }
+
+    async function collect(taskName) {
+      if (!uid) return alert("لم يتم تحميل الحساب بعد");
+
+      const btn = taskButtons[taskName];
+      btn.disabled = true;
+      btn.textContent = "جارٍ التحصيل...";
+
+      const payload = {
+        uid,
+        task: taskName,
+        username,
+        photo,
+      };
+
+      fetch("https://volnex-backend--huissh04.repl.co/collect-task", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            btn.textContent = "✅ تم التحصيل";
+          } else {
+            btn.disabled = false;
+            btn.textContent = "تحصيل";
+            alert(data.message || "حدث خطأ!");
+          }
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = "تحصيل";
+          alert("فشل الاتصال بالخادم");
+        });
+    }
+
+    // تسجيل الدخول وتشغيل المهام
+    signInAnonymously(auth).then(() => {
+      Telegram.WebApp.ready();
+      const tgUser = Telegram?.WebApp?.initDataUnsafe?.user;
+      if (tgUser?.id) {
+        uid = tgUser.id.toString();
+        username = tgUser.username || "مستخدم تليجرام";
+        photo = tgUser.photo_url || photo;
+
+        checkTaskStatus();
+      }
+    });
+
+    window.collect = collect;
+  </script>
+</head>
+<body>
+  <header>
+    <h2><i class="fa-solid fa-list-check"></i> المهام اليومية</h2>
+  </header>
+  <section id="tasks">
+    <ul class="ta">
+      <li>
+        <i class="fa-solid fa-check-circle"></i> تسجيل الدخول اليومي – 
+        <span class="reward">+200 نقطة</span> 
+        <button id="btn-daily" class="btn" onclick="collect('daily_login')">تحصيل</button>
+      </li>
+      <li>
+        <i class="fa-solid fa-user-plus"></i> دعوة صديق – 
+        <span class="reward">+500 نقطة</span> 
+        <button id="btn-invite" class="btn" onclick="collect('invite_friend')">تحصيل</button>
+      </li>
+      <li>
+        <i class="fa-solid fa-gamepad"></i> إكمال جولة لعب – 
+        <span class="reward">+300 نقطة</span> 
+        <button id="btn-finish" class="btn" onclick="collect('finish_game')">تحصيل</button>
+      </li>
+    </ul>
+  </section>
+
+  <nav class="navbar">
+    <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="task.html" class="active"><i class="fa-solid fa-list-check"></i> Tasks</a>
+    <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+    <a href="profile.html"><i class="fa-solid fa-user-circle"></i> Profile</a>
+  </nav>
+</body>
+</html>

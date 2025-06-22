@@ -1,97 +1,207 @@
-html,
+/* الخلفية وتنسيق عام */
 body {
-  padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-main {
-  min-height: 100vh;
-  padding: 4rem 2rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.title {
-  margin: 0;
-  line-height: 1.15;
-  font-size: 4rem;
-}
-
-.title,
-.description {
+  font-family: 'Tajawal', sans-serif;
+  background: url("assets/background.png") no-repeat center center fixed;
+  background-size: cover;
+  color: white;
   text-align: center;
 }
 
-.description {
-  margin: 4rem 0;
-  line-height: 1.5;
-  font-size: 1.5rem;
+/* حاوية اللعبة */
+#gameContainer {
+  position: relative;
+  margin: 0 auto;
+  max-width: 360px;
 }
 
-.code {
-  background: #fafafa;
-  border-radius: 5px;
-  padding: 0.75rem;
-  font-size: 1.1rem;
-  font-family: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono,
-    Bitstream Vera Sans Mono, Courier New, monospace;
+/* منطقة اللعب */
+canvas {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  display: block;
+  margin: 10px auto;
 }
 
-.grid {
+/* عداد النقاط */
+#scoreBoard {
+  font-size: 18px;
+  margin-bottom: 10px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 5px 12px;
+  border-radius: 12px;
+  color: white;
+  z-index: 10;
+}
+
+/* دائرة للكواكب والعملات */
+canvas + * img,
+canvas + * .coin,
+canvas + * .planet {
+  border-radius: 50%;
+}
+
+/* شاشة النهاية */
+.game-over {
+  background: rgba(0,0,0,0.8);
+  padding: 20px;
+  position: fixed;
+  top: 25%;
+  left: 10%;
+  width: 80%;
+  border-radius: 15px;
+  color: white;
+  z-index: 1000;
+  animation: explode 0.5s ease-out;
+}
+
+@keyframes explode {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.game-over button {
+  margin: 10px;
+  padding: 10px 20px;
+  background: #0077ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+/* باقي تصميم واجهة VOLNEX */
+section.status,
+section#tasks,
+section#leaderboard,
+section#profile {
+  padding: 20px;
+  text-align: center;
+}
+
+/* صور الكواكب وصور الملف الشخصي */
+.planet-image,
+.profile-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid gold;
+  object-fit: cover;
+  margin: 10px 0;
+}
+
+/* زر موحد */
+.btn {
+  background-color: #0077ff;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  margin-top: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: #0055cc;
+}
+
+/* قائمة المهام */
+ul.ta {
+  list-style: none;
+  padding: 0;
+}
+
+ul.ta li {
+  background: rgba(0, 0, 50, 0.4);
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* عناصر الترتيب */
+ul#topList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul#topList li {
+  background-color: rgba(0, 0, 40, 0.5);
+  padding: 8px 12px;
+  margin: 6px 10px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 800px;
-}
-
-.card {
-  margin: 1rem;
-  padding: 1.5rem;
+  justify-content: start;
+  font-size: 14px;
   text-align: left;
-  color: inherit;
+}
+
+ul#topList li strong {
+  width: 30px;
+  display: inline-block;
+  text-align: center;
+  margin-right: 10px;
+}
+
+/* صورة داخل الترتيب */
+.rank-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+  border: 2px solid gold;
+}
+
+/* شريط التنقل */
+.navbar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0, 0, 50, 0.8);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-top: 1px solid #555;
+  backdrop-filter: blur(6px);
+}
+
+.navbar a {
+  color: #fff;
   text-decoration: none;
-  border: 1px solid #eaeaea;
-  border-radius: 10px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-  max-width: 300px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.card:hover,
-.card:focus,
-.card:active {
-  color: #0070f3;
-  border-color: #0070f3;
+.navbar a.active {
+  color: gold;
 }
 
-.card h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
+.navbar i {
+  font-size: 18px;
+  margin-bottom: 4px;
 }
 
-.card p {
+/* الهيدر */
+header h2 {
+  font-size: 16px;
   margin: 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
-}
-
-@media (max-width: 600px) {
-  .grid {
-    width: 100%;
-    flex-direction: column;
-  }
+  padding: 8px 0;
+  color: #fff;
+  background: rgba(0, 0, 80, 0.3);
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  text-align: center;
 }

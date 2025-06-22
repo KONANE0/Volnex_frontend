@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLNEX - الملف الشخصي</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    .profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 10px auto;
+      display: block;
+    }
+    .planet-img {
+      width: 80px;
+      margin-top: 10px;
+    }
+  </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
+      authDomain: "volnex-cd132.firebaseapp.com",
+      projectId: "volnex-cd132",
+      storageBucket: "volnex-cd132.appspot.com",
+      messagingSenderId: "261208664577",
+      appId: "1:261208664577:web:2d91010408a2188263ae00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let uid = null;
+
+    function getPlanetInfo(points) {
+      if (points >= 2000000) return { name: "VOLNEX", img: "planet10.png" };
+      if (points >= 1000000) return { name: "الكوكب 9", img: "planet9.png" };
+      if (points >= 700000) return { name: "الكوكب 8", img: "planet8.png" };
+      if (points >= 500000) return { name: "الكوكب 7", img: "planet7.png" };
+      if (points >= 300000) return { name: "الكوكب 6", img: "planet6.png" };
+      if (points >= 200000) return { name: "الكوكب 5", img: "planet5.png" };
+      if (points >= 100000) return { name: "الكوكب 4", img: "planet4.png" };
+      if (points >= 50000) return { name: "الكوكب 3", img: "planet3.png" };
+      if (points >= 20000) return { name: "الكوكب 2", img: "planet2.png" };
+      return { name: "الكوكب 1", img: "planet1.png" };
+    }
+
+    async function loadUser() {
+      const userRef = doc(db, "users", uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data();
+      const planet = getPlanetInfo(data.points || 0);
+
+      document.getElementById("username").textContent = data.username || "مجهول";
+      document.getElementById("points").textContent = data.points || 0;
+      document.getElementById("level").textContent = planet.name;
+      document.getElementById("planetImage").src = `assets/${planet.img}`;
+    }
+
+    signInAnonymously(auth).then(() => {
+      Telegram.WebApp.ready();
+      const tgUser = Telegram?.WebApp?.initDataUnsafe?.user;
+      if (tgUser?.id) {
+        uid = tgUser.id.toString();
+        loadUser();
+
+        // عرض صورة البروفايل من تيليجرام
+        const photoUrl = tgUser.photo_url;
+        if (photoUrl) {
+          document.getElementById("profilePic").src = photoUrl;
+        }
+      }
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h2><i class="fa-solid fa-user-circle"></i> الملف الشخصي</h2>
+  </header>
+
+  <section class="status" style="text-align: center">
+    <img id="profilePic" class="profile-pic" src="assets/default-avatar.png" alt="الصورة الشخصية" />
+    <p>اسم المستخدم: <strong id="username">...</strong></p>
+    <p>رصيدك الحالي: <strong id="points">...</strong></p>
+    <p>مستواك: <strong id="level">...</strong></p>
+    <img id="planetImage" class="planet-img" src="assets/planet1.png" alt="صورة الكوكب" />
+  </section>
+
+  <nav class="navbar">
+    <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="task.html"><i class="fa-solid fa-list-check"></i> Tasks</a>
+    <a href="leaderboard.html"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+    <a href="profile.html" class="active"><i class="fa-solid fa-user-circle"></i> Profile</a>
+  </nav>
+</body>
+</html>

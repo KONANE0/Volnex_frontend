@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLNEX - العب الآن</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
+      authDomain: "volnex-cd132.firebaseapp.com",
+      projectId: "volnex-cd132",
+      storageBucket: "volnex-cd132.appspot.com",
+      messagingSenderId: "261208664577",
+      appId: "1:261208664577:web:2d91010408a2188263ae00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // استخراج بيانات المستخدم من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("uid");
+    const username = urlParams.get("username") || "مستخدم تليجرام";
+    const photo = urlParams.get("photo") || "https://t.me/i/userpic/320/placeholder.jpg";
+
+    // تسجيل المستخدم أو تحديث الدخول
+    fetch("https://volnex-backend--huissh04.repl.co/saveUser", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, username, photo }),
+    })
+    .then(res => res.json())
+    .then(() => {
+      // جلب النقاط الحالية من Firestore
+      const docRef = doc(db, "users", uid);
+      getDoc(docRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const currentPoints = data.points || 0;
+
+          document.getElementById("score").textContent = currentPoints;
+
+          // تمرير البيانات لـ play.js
+          window.userId = uid;
+          window.userPoints = currentPoints;
+          window.username = username;
+        }
+      });
+    })
+    .catch(err => {
+      console.error("فشل تحميل البيانات:", err);
+    });
+  </script>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="360" height="540"></canvas>
+    <div id="scoreBoard">
+      <p>النقاط: <span id="score">0</span></p>
+    </div>
+  </div>
+  <script src="play.js"></script>
+</body>
+</html>

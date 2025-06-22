@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLNEX - الترتيب</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    .me {
+      background-color: #1e1e1e;
+      color: #00ffcc;
+      border-radius: 10px;
+      padding: 6px;
+      font-weight: bold;
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
+      authDomain: "volnex-cd132.firebaseapp.com",
+      projectId: "volnex-cd132",
+      storageBucket: "volnex-cd132.appspot.com",
+      messagingSenderId: "261208664577",
+      appId: "1:261208664577:web:2d91010408a2188263ae00"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let uid = null;
+
+    async function showLeaderboard() {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, orderBy("points", "desc"));
+      const querySnapshot = await getDocs(q);
+
+      const leaderboard = [];
+      let myRank = 0;
+      let myPoints = 0;
+      let position = 1;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const userEntry = {
+          uid: doc.id,
+          username: data.username || "مجهول",
+          points: data.points || 0
+        };
+        leaderboard.push(userEntry);
+
+        if (doc.id === uid) {
+          myRank = position;
+          myPoints = userEntry.points;
+        }
+
+        position++;
+      });
+
+      document.getElementById("myRank").textContent = `#${myRank || "?"}`;
+      document.getElementById("myPoints").textContent = myPoints;
+
+      const list = document.getElementById("topList");
+
+      // عرض أول 100 لاعب
+      leaderboard.slice(0, 100).forEach((user, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>#${i + 1}</strong> - ${user.username} <span>(${user.points} نقطة)</span>`;
+        if (user.uid === uid) li.classList.add("me");
+        list.appendChild(li);
+      });
+
+      // عرض المستخدم إذا لم يكن ضمن أول 100
+      if (myRank > 100) {
+        const divider = document.createElement("li");
+        divider.innerHTML = `<hr>`;
+        list.appendChild(divider);
+
+        const meLi = document.createElement("li");
+        meLi.classList.add("me");
+        meLi.innerHTML = `<strong>#${myRank}</strong> - أنت <span>(${myPoints} نقطة)</span>`;
+        list.appendChild(meLi);
+      }
+    }
+
+    signInAnonymously(auth).then(() => {
+      Telegram.WebApp.ready();
+      const tgUser = Telegram?.WebApp?.initDataUnsafe?.user;
+      if (tgUser?.id) {
+        uid = tgUser.id.toString();
+        showLeaderboard();
+      }
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h2><i class="fa-solid fa-ranking-star"></i> الترتيب</h2>
+  </header>
+
+  <section class="status">
+    <p>ترتيبك الحالي: <strong id="myRank">...</strong></p>
+    <p>نقاطك: <strong id="myPoints">...</strong></p>
+  </section>
+
+  <section class="leaderboard">
+    <h3>أفضل 100 لاعب:</h3>
+    <ul id="topList"></ul>
+  </section>
+
+  <nav class="navbar">
+    <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="task.html"><i class="fa-solid fa-list-check"></i> Tasks</a>
+    <a href="leaderboard.html" class="active"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+    <a href="profile.html"><i class="fa-solid fa-user-circle"></i> Profile</a>
+  </nav>
+</body>
+</html>
