@@ -23,24 +23,12 @@
   </style>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("uid");
+    const username = urlParams.get("username") || "مستخدم تليجرام";
+    const photo = urlParams.get("photo") || "https://t.me/i/userpic/320/placeholder.jpg";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
-      authDomain: "volnex-cd132.firebaseapp.com",
-      projectId: "volnex-cd132",
-      storageBucket: "volnex-cd132.appspot.com",
-      messagingSenderId: "261208664577",
-      appId: "1:261208664577:web:2d91010408a2188263ae00"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let uid = null;
+    const BACKEND_URL = "https://volnex-backend.netlify.app";
 
     function getPlanetInfo(points) {
       if (points >= 2000000) return { name: "VOLNEX", img: "planet10.png" };
@@ -56,33 +44,35 @@
     }
 
     async function loadUser() {
-      const userRef = doc(db, "users", uid);
-      const snap = await getDoc(userRef);
-      if (!snap.exists()) return;
+      try {
+        const res = await fetch(`${BACKEND_URL}/getUser?uid=${uid}`);
+        const data = await res.json();
 
-      const data = snap.data();
-      const planet = getPlanetInfo(data.points || 0);
+        if (!data || !data.username) return;
 
-      document.getElementById("username").textContent = data.username || "مجهول";
-      document.getElementById("points").textContent = data.points || 0;
-      document.getElementById("level").textContent = planet.name;
-      document.getElementById("planetImage").src = `assets/${planet.img}`;
+        const planet = getPlanetInfo(data.points || 0);
+
+        document.getElementById("username").textContent = data.username || "مجهول";
+        document.getElementById("points").textContent = data.points || 0;
+        document.getElementById("level").textContent = planet.name;
+        document.getElementById("planetImage").src = `assets/${planet.img}`;
+        document.getElementById("profilePic").src = photo;
+
+        // تمرير uid للروابط
+        const links = document.querySelectorAll("a");
+        links.forEach(link => {
+          const url = new URL(link.href, window.location.origin);
+          url.searchParams.set("uid", uid);
+          url.searchParams.set("username", username);
+          url.searchParams.set("photo", photo);
+          link.href = url.toString();
+        });
+      } catch (e) {
+        console.error("فشل تحميل بيانات المستخدم", e);
+      }
     }
 
-    signInAnonymously(auth).then(() => {
-      Telegram.WebApp.ready();
-      const tgUser = Telegram?.WebApp?.initDataUnsafe?.user;
-      if (tgUser?.id) {
-        uid = tgUser.id.toString();
-        loadUser();
-
-        // عرض صورة البروفايل من تيليجرام
-        const photoUrl = tgUser.photo_url;
-        if (photoUrl) {
-          document.getElementById("profilePic").src = photoUrl;
-        }
-      }
-    });
+    loadUser();
   </script>
 </head>
 <body>

@@ -16,92 +16,66 @@
     }
   </style>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      query,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get("uid");
+    const username = urlParams.get("username") || "مستخدم تليجرام";
+    const photo = urlParams.get("photo") || "";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA66o7y3ORFWEO8iuMf7HujmYQacucZYXg",
-      authDomain: "volnex-cd132.firebaseapp.com",
-      projectId: "volnex-cd132",
-      storageBucket: "volnex-cd132.appspot.com",
-      messagingSenderId: "261208664577",
-      appId: "1:261208664577:web:2d91010408a2188263ae00"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let uid = null;
+    const BACKEND_URL = "https://volnex-backend.netlify.app";
 
     async function showLeaderboard() {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, orderBy("points", "desc"));
-      const querySnapshot = await getDocs(q);
+      try {
+        const response = await fetch(`${BACKEND_URL}/getUser?uid=${uid}`);
+        const myData = await response.json();
 
-      const leaderboard = [];
-      let myRank = 0;
-      let myPoints = 0;
-      let position = 1;
+        const res = await fetch(`${BACKEND_URL}/leaderboard`);
+        const data = await res.json();
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const userEntry = {
-          uid: doc.id,
-          username: data.username || "مجهول",
-          points: data.points || 0
-        };
-        leaderboard.push(userEntry);
+        const leaderboard = data.users || [];
+        const list = document.getElementById("topList");
 
-        if (doc.id === uid) {
-          myRank = position;
-          myPoints = userEntry.points;
+        let myRank = 0;
+        let myPoints = myData.points || 0;
+
+        leaderboard.forEach((user, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>#${index + 1}</strong> - ${user.username} <span>(${user.points} نقطة)</span>`;
+          if (user.uid === uid) {
+            li.classList.add("me");
+            myRank = index + 1;
+          }
+          list.appendChild(li);
+        });
+
+        if (myRank === 0 && myData.username) {
+          const divider = document.createElement("li");
+          divider.innerHTML = `<hr>`;
+          list.appendChild(divider);
+
+          const meLi = document.createElement("li");
+          meLi.classList.add("me");
+          meLi.innerHTML = `<strong>-</strong> - ${myData.username} <span>(${myPoints} نقطة)</span>`;
+          list.appendChild(meLi);
         }
 
-        position++;
-      });
+        document.getElementById("myRank").textContent = myRank > 0 ? `#${myRank}` : "-";
+        document.getElementById("myPoints").textContent = myPoints;
 
-      document.getElementById("myRank").textContent = `#${myRank || "?"}`;
-      document.getElementById("myPoints").textContent = myPoints;
-
-      const list = document.getElementById("topList");
-
-      // عرض أول 100 لاعب
-      leaderboard.slice(0, 100).forEach((user, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>#${i + 1}</strong> - ${user.username} <span>(${user.points} نقطة)</span>`;
-        if (user.uid === uid) li.classList.add("me");
-        list.appendChild(li);
-      });
-
-      // عرض المستخدم إذا لم يكن ضمن أول 100
-      if (myRank > 100) {
-        const divider = document.createElement("li");
-        divider.innerHTML = `<hr>`;
-        list.appendChild(divider);
-
-        const meLi = document.createElement("li");
-        meLi.classList.add("me");
-        meLi.innerHTML = `<strong>#${myRank}</strong> - أنت <span>(${myPoints} نقطة)</span>`;
-        list.appendChild(meLi);
+        // تمرير uid للرابط
+        const links = document.querySelectorAll("a");
+        links.forEach(link => {
+          const url = new URL(link.href, window.location.origin);
+          url.searchParams.set("uid", uid);
+          url.searchParams.set("username", username);
+          url.searchParams.set("photo", photo);
+          link.href = url.toString();
+        });
+      } catch (err) {
+        console.error("فشل تحميل الترتيب:", err);
       }
     }
 
-    signInAnonymously(auth).then(() => {
-      Telegram.WebApp.ready();
-      const tgUser = Telegram?.WebApp?.initDataUnsafe?.user;
-      if (tgUser?.id) {
-        uid = tgUser.id.toString();
-        showLeaderboard();
-      }
-    });
+    showLeaderboard();
   </script>
 </head>
 <body>

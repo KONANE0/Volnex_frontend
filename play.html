@@ -7,28 +7,28 @@
   <link rel="stylesheet" href="style.css" />
 
   <script type="module">
-    // استخراج بيانات المستخدم من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const uid = urlParams.get("uid");
     const username = urlParams.get("username") || "مستخدم تليجرام";
     const photo = urlParams.get("photo") || "https://t.me/i/userpic/320/placeholder.jpg";
 
-    // تسجيل المستخدم أو تحديث دخوله
-    fetch("https://volnex-backend--huissh04.repl.co/saveUser", {
+    const BACKEND_URL = "https://volnex-backend.netlify.app";
+
+    // تسجيل أو تحديث المستخدم في الباك إند
+    fetch(`${BACKEND_URL}/saveUser`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ uid, username, photo }),
     })
-    .then(res => res.json())
-    .then(() => {
-      // تمرير البيانات لـ play.js
-      window.userId = uid;
-      window.username = username;
-      window.photo = photo;
-    })
-    .catch(err => {
-      console.error("فشل تسجيل الدخول:", err);
-    });
+      .then(res => res.json())
+      .then(() => {
+        window.userId = uid;
+        window.username = username;
+        window.photo = photo;
+      })
+      .catch(err => {
+        console.error("فشل تسجيل الدخول:", err);
+      });
   </script>
 </head>
 <body>
