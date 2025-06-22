@@ -38,7 +38,7 @@ let animationId;
 
 // جلب النقاط من السيرفر (تم التعديل)
 if (userId) {
-  fetch(`https://volnex-backend.netlify.app/getPoints?uid=${userId}`)
+  fetch(`https://volnex-backend--huissh04.repl.co/getPoints?uid=${userId}`)
     .then((res) => res.json())
     .then((data) => {
       basePoints = data.points || 0;
@@ -138,7 +138,7 @@ function endGame() {
 
   // تحديث النقاط على السيرفر (تم التعديل)
   if (window.userId && earnedPoints > 0) {
-    fetch(`https://volnex-backend.netlify.app/updatePoints`, {
+    fetch(`https://volnex-backend--huissh04.repl.co/updatePoints`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
